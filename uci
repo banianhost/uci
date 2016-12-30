@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+
+# ------------------------------------------------------------------------------------------------------------
+## µci is a tiny CI script that can be embedded in containers
+#
+## Copyright (C) 2017 Pooya Parsa <pooya@pi0.ir>
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU
+# General Public License as published by the Free Software Foundation, either version 3 of the License,
+# or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see http://www.gnu.org/licenses/.
+#
+## Usage : uci [command]
+##Available commands:
+#
+# Some useful references:
+#    https://github.com/blog/1270
+# ------------------------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------
+# bootstrap - called after script initialization
+# -----------------------------------------------------------------------------------
+bootstrap(){
+    # Environment variables
+    WORKSPACE=${UCI_WORKSPACE:-$PWD}
+    REPO=${UCI_REPO}
+    TOKEN=${UCI_TOKEN}
+    HOOK_SCRIPT=${UCI_HOOK_SCRIPT}
+    WATCH_INTERVAL=${UCI_WATCH_INTERVAL:-60}
+
+    # Inject token to repo, if https
+    REPO=`echo ${REPO} | sed "s|https://|https://${TOKEN}:x-oauth-basic@|"`
+
+    # Keep script path before any cd. used for usage command
+    SCRIPT_PATH=`realpath $0`
+
+    # cd to workspace
+    cd ${WORKSPACE}
+
+    # Ensure .git exists
+    if [ ! -d .git ]; then
+        git init
+    fi
+
+    # Dispatch command
+    case $1 in
+        pull) pull ;;
+        watch) watch ;;
+        *) usage ;;
+    esac
+}
+
+# -----------------------------------------------------------------------------------
+## pull - pull latest commit from origin
+# -----------------------------------------------------------------------------------
+pull(){
+    CommitA=`get_commit`
+    log "Pulling repo..."
+    git pull ${REPO} 1>&2 2>/dev/null
+    CommitB=`get_commit`
+
+    if [ ${CommitA} != ${CommitB} ]; then
+        onCommit ${CommitA} ${CommitB}
+    fi
+}
+
+# -----------------------------------------------------------------------------------
+## watch - pull with time intervals
+# -----------------------------------------------------------------------------------
+watch(){
+    while [ true ] ; do
+        pull
+        log "Sleeping for ${WATCH_INTERVAL} seconds..."
+        sleep ${WATCH_INTERVAL}
+    done
+}
+
+# -----------------------------------------------------------------------------------
+# log
+# -----------------------------------------------------------------------------------
+log(){
+    echo "[`date +"%D %T"`]" $@
+}
+
+# -----------------------------------------------------------------------------------
+# get_commit - get current commit
+# -----------------------------------------------------------------------------------
+get_commit(){
+    git rev-parse HEAD 2>/dev/null
+}
+
+# -----------------------------------------------------------------------------------
+# onCommit - execute onCommit tasks
+# -----------------------------------------------------------------------------------
+onCommit(){
+    log "Commit $1 ~> $2"
+
+    if [ -x ${HOOK_SCRIPT} ]; then
+        ${HOOK_SCRIPT} $1 $2
+    fi
+}
+
+# -----------------------------------------------------------------------------------
+# usage - print script usage
+# -----------------------------------------------------------------------------------
+usage(){
+    cat $SCRIPT_PATH | grep "^##" | grep -o "[^#]*"
+}
+
+# -----------------------------------------------------------------------------------
+bootstrap $@

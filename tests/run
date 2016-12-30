@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -a
+
+# Initialize fresh workspace dir
+[ -d workspace ] && rm -r workspace
+mkdir -p workspace
+
+# UCI Env
+UCI_WORKSPACE=`pwd`/workspace
+UCI_HOOK_SCRIPT=`pwd`/hook
+UCI_WATCH_INTERVAL=10
+
+# Source env file, if any
+[ -f env ] && source ./env
+
+# Alias uci inside script to project one
+uci() {
+ ../uci $@
+}
+
+# Watch
+uci watch
