@@ -13,10 +13,10 @@ UCI_WATCH_INTERVAL=10
 # Source env file, if any
 [ -f env ] && source ./env
 
-# Alias uci inside script to project one
+# Alias uci inside script to project's one
 uci() {
  ../uci $@
 }
 
-# Watch
-uci watch
+# Run test command
+uci run 'echo Init && sleep 1 && echo Done && exit 3'

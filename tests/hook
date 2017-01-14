@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-echo "Commit A: $1"
-echo "Commit B: $2"

@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------------------------------------
 ## µci is a tiny CI script that can be embedded in containers
 #
-# Copyright (c) 2016 Pooya Parsa - MIT
+## Copyright (c) 2016 Pooya Parsa - MIT
 #
 ## Usage : uci [command]
 ##Available commands:
@@ -27,6 +27,7 @@ bootstrap(){
     REPO=`echo ${REPO} | sed "s|https://|https://${TOKEN}:x-oauth-basic@|"`
 
     # Keep script path before any cd. used for usage command
+    SCRIPT=`readlink $0`
     SCRIPT_PATH=`realpath $0`
 
     # cd to workspace
@@ -41,7 +42,11 @@ bootstrap(){
     case $1 in
         pull) pull ;;
         watch) watch ;;
-        *) usage ;;
+        --help) usage ;;
+        run) 
+            shift
+            run_command $@
+        ;;
     esac
 }
 
@@ -74,7 +79,7 @@ watch(){
 # log
 # -----------------------------------------------------------------------------------
 log(){
-    echo "[`date +"%D %T"`]" $@
+    echo "[uci] [`date +"%D %T"`]" $@
 }
 
 # -----------------------------------------------------------------------------------
@@ -96,11 +101,31 @@ onCommit(){
 }
 
 # -----------------------------------------------------------------------------------
-# usage - print script usage
+## --help - print script usage
 # -----------------------------------------------------------------------------------
 usage(){
     cat $SCRIPT_PATH | grep "^##" | grep -o "[^#]*"
 }
 
 # -----------------------------------------------------------------------------------
+## run command - run command and watch in background
+# -----------------------------------------------------------------------------------
+run_command(){
+    # Run watch in background and main command in forground
+    # This way we can properly handle and return main command errors
+    $SCRIPT watch &
+    WATCH_PID=$!
+   
+    # Run real command
+    echo $@ | sh
+    
+    # Clean exit
+    log "Process finished with status code $?"
+    log "Shutting down"
+    kill -9 $WATCH_PID
+    exit $?
+}
+
+# -----------------------------------------------------------------------------------
+## [commands]
 bootstrap $@
