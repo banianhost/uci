@@ -20,7 +20,7 @@ bootstrap(){
     WORKSPACE=${UCI_WORKSPACE:-$PWD}
     REPO=${UCI_REPO}
     TOKEN=${UCI_TOKEN}
-    HOOK_SCRIPT=${UCI_HOOK_SCRIPT}
+    HOOK_SCRIPT=${UCI_HOOK_SCRIPT:-true}
     WATCH_INTERVAL=${UCI_WATCH_INTERVAL:-60}
 
     # Inject token to repo, if https
@@ -101,10 +101,7 @@ get_commit(){
 # -----------------------------------------------------------------------------------
 onCommit(){
     log "Commit $1 ~> $2"
-
-    if [ -x ${HOOK_SCRIPT} ]; then
-        ${HOOK_SCRIPT} $1 $2
-    fi
+    echo ${HOOK_SCRIPT} $1 $2 | bash
 }
 
 # -----------------------------------------------------------------------------------
