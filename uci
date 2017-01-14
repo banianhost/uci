@@ -40,9 +40,15 @@ bootstrap(){
 
     # Dispatch command
     case $1 in
-        pull) pull ;;
-        watch) watch ;;
-        --help) usage ;;
+        pull)
+            pull
+        ;;
+        watch)
+            watch
+        ;;
+        --help)
+            usage
+        ;;
         run) 
             shift
             run_command $@
@@ -55,7 +61,7 @@ bootstrap(){
 # -----------------------------------------------------------------------------------
 pull(){
     CommitA=`get_commit`
-    log "Pulling repo..."
+    log "Pulling git repo"
     git pull ${REPO} 1>&2 2>/dev/null
     CommitB=`get_commit`
 
@@ -68,6 +74,7 @@ pull(){
 ## watch - pull with time intervals
 # -----------------------------------------------------------------------------------
 watch(){
+    log "Watching repo for changes"
     while [ true ] ; do
         pull
         log "Sleeping for ${WATCH_INTERVAL} seconds..."
