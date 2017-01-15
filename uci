@@ -115,6 +115,10 @@ usage(){
 ## run command - run command and watch in background
 # -----------------------------------------------------------------------------------
 run_command(){
+    
+    # Pull for first time before continue
+    pull
+
     # Run watch in background and main command in forground
     # This way we can properly handle and return main command errors
     $SCRIPT watch &
@@ -122,6 +126,7 @@ run_command(){
    
     # Run real command
     echo $@ | sh
+    #while [ $? -e 0 ]; do !!; done
     
     # Clean exit
     log "Process finished with status code $?"
@@ -131,5 +136,4 @@ run_command(){
 }
 
 # -----------------------------------------------------------------------------------
-## [commands]
 bootstrap $@
