@@ -74,7 +74,7 @@ pull(){
         
         # Run arguments as command if provided
         if [ ! -z $@ ]; then
-            echo $@ | bash
+            echo "$@" | bash
         fi
     fi
 }
@@ -118,7 +118,7 @@ get_commit(){
 # -----------------------------------------------------------------------------------
 on_commit(){
     log "Commit $1 ~> $2"
-    echo ${HOOK_SCRIPT} $1 $2 | bash
+    echo "${HOOK_SCRIPT} $1 $2" | bash
 }
 
 # -----------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ usage(){
 loop(){
     while [ true ] ; do
         log Starting daemon $@
-        echo $@ | bash &
+        echo "$@" | bash &
         echo "$!" > ${DAEMON_PID_FILE}
         log Daemon running with PID $!
         wait $!
