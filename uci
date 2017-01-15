@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -e
 
 # ------------------------------------------------------------------------------------------------------------
 ## µci is a tiny CI script that can be embedded in containers
