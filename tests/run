@@ -18,8 +18,5 @@ uci() {
  ../uci $@
 }
 
-# Single command
-uci run echo Hello!
-
 # Bash command
-uci run 'echo Init && sleep 1 && echo Done && exit 3'
+uci run 'echo Init && sleep 1 && echo Done'

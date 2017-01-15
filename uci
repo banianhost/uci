@@ -29,7 +29,10 @@ bootstrap(){
     # Keep script path before any cd. used for usage command
     SCRIPT=`readlink $0`
     SCRIPT_PATH=`realpath $0`
-
+    
+    # PID file to keep handle to background runnig process
+    COMMAND_PID_FILE=/tmp/uci_$$.pid
+    
     # cd to workspace
     cd ${WORKSPACE}
 
@@ -57,7 +60,7 @@ bootstrap(){
 }
 
 # -----------------------------------------------------------------------------------
-## pull - pull latest commit from origin
+## pull [command] - pull latest commit from origin, then call hook and command if provided
 # -----------------------------------------------------------------------------------
 pull(){
     CommitA=`get_commit`
@@ -66,18 +69,24 @@ pull(){
     CommitB=`get_commit`
 
     if [ ${CommitA} != ${CommitB} ]; then
+        # Call hook 
         on_commit ${CommitA} ${CommitB}
+        
+        # Run arguments as command if provided
+        if [ ! -z $@ ]; then
+            echo $@ | bash
+        fi
     fi
 }
 
 # -----------------------------------------------------------------------------------
-## watch - pull with time intervals
+## watch [command] - pull with time intervals
 # -----------------------------------------------------------------------------------
 watch(){
-    log "Watching repo for changes"
+    log "Watching repo for changes every ${WATCH_INTERVAL} seconds..."
     while [ true ] ; do
-        pull
-        debug "Sleeping for ${WATCH_INTERVAL} seconds..."
+        pull $@
+        debug "Sleeping for ${WATCH_INTERVAL} seconds"
         sleep ${WATCH_INTERVAL}
     done
 }
@@ -86,7 +95,7 @@ watch(){
 # log
 # -----------------------------------------------------------------------------------
 log(){
-    echo "[uci] [`date +"%D %T"`]" $@
+    echo -e "[µci] [`date +"%D %T"`]\t" $@
 }
 
 # -----------------------------------------------------------------------------------
@@ -120,27 +129,67 @@ usage(){
 }
 
 # -----------------------------------------------------------------------------------
+# loop
+# -----------------------------------------------------------------------------------
+loop(){
+    while [ true ] ; do
+        log Starting $@
+        echo $@ | bash &
+        echo "$!" > ${COMMAND_PID_FILE}
+        log Command running with PID $!
+        wait $!
+        log Command exited with code $?
+        sleep 1
+    done
+}
+
+# -----------------------------------------------------------------------------------
+# try_kill
+# -----------------------------------------------------------------------------------
+try_kill(){
+    name=$1
+    shift
+    if [ ! -z $@ ] ; then
+        log "Killing $name ($@)"
+        kill $@ 2>/dev/null
+    fi
+}
+
+# -----------------------------------------------------------------------------------
+# kill command
+# -----------------------------------------------------------------------------------
+kill_command(){
+     if [ -f $COMMAND_PID_FILE ] ; then
+        COMMAND_PID=`cat $COMMAND_PID_FILE`
+        try_kill "process" $COMMAND_PID
+        rm $COMMAND_PID_FILE
+    fi
+}
+
+# -----------------------------------------------------------------------------------
+# cleanup
+# -----------------------------------------------------------------------------------
+cleanup(){
+    try_kill "loop" $LOOP_PID
+    kill_command
+}
+ 
+# ----------------------------------------------------------------------------------
 ## run command - run command and watch in background
 # -----------------------------------------------------------------------------------
 run_command(){
     
     # Pull for first time before continue
     pull
-
-    # Run watch in background and main command in forground
-    # This way we can properly handle and return main command errors
-    $SCRIPT watch &
-    WATCH_PID=$!
    
-    # Run real command
-    echo $@ | bash
-    
-    # Clean exit
-    log "Process finished with status code $?"
-    log "Shutting down"
-    kill -9 $WATCH_PID
-    exit $?
+    # Fork command with infinity loop
+    (loop $@) &
+    LOOP_PID=$!
+
+    # Start watching
+    watch kill_command
 }
 
 # -----------------------------------------------------------------------------------
+trap cleanup EXIT
 bootstrap $@
