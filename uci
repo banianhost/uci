@@ -71,11 +71,9 @@ pull(){
     if [ ${CommitA} != ${CommitB} ]; then
         # Call hook 
         on_commit ${CommitA} ${CommitB}
-        
-        # Run arguments as command if provided
-        if [ ! -z $@ ]; then
-            echo "$@" | bash
-        fi
+       
+        # Then arg
+        [ ! -z $@ ] && $@
     fi
 }
 
