@@ -19,4 +19,4 @@ uci() {
 }
 
 # Bash command
-uci run 'echo Init && sleep 1 && echo Done'
+uci daemon 'echo Init && sleep 1 && echo Done'
