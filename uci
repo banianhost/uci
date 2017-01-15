@@ -125,8 +125,7 @@ run_command(){
     WATCH_PID=$!
    
     # Run real command
-    echo $@ | sh
-    #while [ $? -e 0 ]; do !!; done
+    echo $@ | bash
     
     # Clean exit
     log "Process finished with status code $?"
