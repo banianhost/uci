@@ -61,12 +61,12 @@ bootstrap(){
 # -----------------------------------------------------------------------------------
 pull(){
     CommitA=`get_commit`
-    log "Pulling git repo"
-    git pull ${REPO} 1>&2 2>/dev/null
+    debug "Pulling git repo"
+    git pull --quiet ${REPO}
     CommitB=`get_commit`
 
     if [ ${CommitA} != ${CommitB} ]; then
-        onCommit ${CommitA} ${CommitB}
+        on_commit ${CommitA} ${CommitB}
     fi
 }
 
@@ -77,7 +77,7 @@ watch(){
     log "Watching repo for changes"
     while [ true ] ; do
         pull
-        log "Sleeping for ${WATCH_INTERVAL} seconds..."
+        debug "Sleeping for ${WATCH_INTERVAL} seconds..."
         sleep ${WATCH_INTERVAL}
     done
 }
@@ -90,6 +90,14 @@ log(){
 }
 
 # -----------------------------------------------------------------------------------
+# debug 
+# -----------------------------------------------------------------------------------
+debug(){
+    [ ! -z $UCI_DEBUG ] && log $@
+}
+
+
+# -----------------------------------------------------------------------------------
 # get_commit - get current commit
 # -----------------------------------------------------------------------------------
 get_commit(){
@@ -97,9 +105,9 @@ get_commit(){
 }
 
 # -----------------------------------------------------------------------------------
-# onCommit - execute onCommit tasks
+# on_commit - execute on_commit tasks
 # -----------------------------------------------------------------------------------
-onCommit(){
+on_commit(){
     log "Commit $1 ~> $2"
     echo ${HOOK_SCRIPT} $1 $2 | bash
 }

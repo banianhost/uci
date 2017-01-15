@@ -12,3 +12,4 @@ UCI_REPO                    | -                 | Path to git repo url. currentl
 UCI_TOKEN                   | -                 | GitHub Personal Access Token
 UCI_HOOK_SCRIPT             | -                 | The script to optionally called on *new* commits
 UCI_WATCH_INTERVAL          | 60                | Interval between pulls on *watch* mode
+UCI_DEBUG                   | -                 | Enable more verbose logs
