@@ -119,6 +119,7 @@ get_commit(){
 on_commit(){
     log "Commit $1 ~> $2"
     echo "${HOOK_SCRIPT}" | bash
+    if [ $? -ne 0 ]; then { log Hook script failed shutting down ; exit $?; } fi
 }
 
 # -----------------------------------------------------------------------------------
