@@ -65,6 +65,7 @@ bootstrap(){
 pull(){
     CommitA=`get_commit`
     debug "Pulling git repo"
+    git reset --hard --quiet
     git pull --quiet ${REPO}
     CommitB=`get_commit`
 
